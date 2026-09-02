@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Gym Owner Root Document: owners/{ownerId}
+    match /owners/{ownerId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == ownerId;
+
+      // Subcollections (members, membershipPlans, customerMemberships, payments, invoices, attendance, notifications, settings, profile)
+      match /{allSubcollections=**} {
+        allow read, write: if isAuthenticated() && request.auth.uid == ownerId;
+      }
+    }
+
+    // Gym Owner / User Root Document: users/{userId} (Legacy fallback support)
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || resource.data.gymId == request.auth.uid);
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isAuthenticated() && request.auth.uid == userId;
+      allow delete: if false;
+
+      // Subcollections (customers, membershipPlans, customerMemberships, payments, invoices, attendance, notifications, settings)
+      match /{allSubcollections=**} {
+        allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      }
+    }
+
+    // Gym root collection: gyms/{gymId}
+    match /gyms/{gymId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && (request.auth.uid == gymId || request.resource.data.ownerId == request.auth.uid);
+      allow delete: if false;
+
+      match /{allSubcollections=**} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+  }
+}
+
+

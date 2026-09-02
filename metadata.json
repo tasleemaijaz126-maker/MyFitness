@@ -1,0 +1,7 @@
+{
+  "name": "My Fitness",
+  "description": "Comprehensive Gym Management ERP for members, plans, payments, customizable invoices, and business reports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
